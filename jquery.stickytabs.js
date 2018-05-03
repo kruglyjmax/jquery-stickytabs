@@ -17,12 +17,22 @@
 
         // Show the tab corresponding with the hash in the URL, or the first tab.
         var showTabFromHash = function() {
-          var hash = settings.selectorAttribute == "href" ? window.location.hash : window.location.hash.substring(1);
-          if (hash != '') {
-              var selector = hash ? 'a[' + settings.selectorAttribute +'="' + hash + '"]' : settings.initialTab;
-              $(selector, context).tab('show');
-              setTimeout(backToTop, 1);
+          var hash = window.location.hash.substring(1),
+              hpieces = hash.split('/'),
+              prefix = settings.selectorAttribute == "href" ? "#" : "";
+
+          for (var i = 0; i < hpieces.length; i++) {
+              if (hpieces[i] != '') {
+                  var selector = hpieces[i] ? 'a[' + settings.selectorAttribute +'="' + prefix + hpieces[i] + '"]' : settings.initialTab;
+                  if (i == 0) {
+                    $(selector, context).tab('show');
+                  } else {
+                    $(selector, '.nav-tabs-nested').tab('show');
+                  }
+              }
           }
+
+          setTimeout(backToTop, 1);
         }
 
         // We use pushState if it's available so the page won't jump, otherwise a shim.
@@ -53,9 +63,22 @@
         // Change the URL when tabs are clicked
         $('a', context).on('click', function(e) {
           var hash = this.href.split('#')[1];
+
           if (typeof hash != 'undefined' && hash != '') {
               var adjustedhash = settings.getHashCallback(hash, this);
+
               changeHash(adjustedhash);
+              setTimeout(backToTop, 1);
+          }
+        });
+
+        $('a', '.nav-tabs-nested').on('click', function(e) {
+          var hash = this.href.split('#')[1];
+
+          if (typeof hash != 'undefined' && hash != '') {
+              var adjustedhash = settings.getHashCallback(hash, this);
+
+              changeHash([$('li.active > a', context).attr("href").split('#')[1],hash].join('/'));
               setTimeout(backToTop, 1);
           }
         });
